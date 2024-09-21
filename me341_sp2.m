@@ -1,7 +1,7 @@
 %% Naming Convension:
 % Variable names that begin with lower case letter "v" are vectors.
 % Variable names that begin with lower case letter "m" are matrices.
-% Variable names that begin with neither "v" or "m" are scalars.
+% Variable names that begin with no lower case letter or the letter "s" are scalars.
 % 
 
 % Lengths (L):
@@ -9,7 +9,7 @@ Loa = 0.40; % [m] Length from O to A.
 Lab = 0.35; % [m] Length from A to B.
 Lbc = 0.30; % [m] Length from B to C.
 Lob = Loa + Lab; % [m] Length from O to B.
-Ls   = Lob + Lbc; % [m] Length from O to C (the whole shaft).
+Ls  = Lob + Lbc; % [m] Length from O to C (the whole shaft).
 
 % Diameters (D):
 Da  = 0.6; % [m] Diameter of gear A.
@@ -123,7 +123,7 @@ vFb = Fb * [0.0; -sin(Ab);  cos(Ab)];
 % => (Fc)z = -(Loa * (Fa)z + (Loa + Lab) * (Fb)z) / (Loa + Lab + Lac)
 % <= Lob = Loa + Lab
 % <= Ls = Loa + Lab + Lbc
-% >> (Fc)z = -(Loa * (Fa)z + Lob * (Fb)z) / L
+% >> (Fc)z = -(Loa * (Fa)z + Lob * (Fb)z) / Ls
 % 
 % Moment about z-axis at O:
 % sum[(Mo)z] = Loa * (Fa)y + (Loa + Lab) * (Fb)y + (Loa + Lab + Lac) * (Fc)y = 0
@@ -133,14 +133,14 @@ vFb = Fb * [0.0; -sin(Ab);  cos(Ab)];
 % => (Fc)y = -(Loa * (Fa)y + (Loa + Lab) * (Fb)y) / (Loa + Lab + Lac)
 % <= Lob = Loa + Lab
 % <= Ls = Loa + Lab + Lbc
-% >> (Fc)y = -(Loa * (Fa)y + Lob * (Fb)y) / L
+% >> (Fc)y = -(Loa * (Fa)y + Lob * (Fb)y) / Ls
 %
 % Note both can be done in parallel using vectors ((Fc)x can be diregarded because 
 % both (Fa)x and (Fb)x are zero):
 % <= (Fc)x = 0
-% <= (Fc)y = -(Loa * (Fa)y + Lob * (Fb)y) / L
-% <= (Fc)z = -(Loa * (Fa)z + Lob * (Fb)z) / L
-% >> vFc = -(Loa * vFa + Lob * vFb) / L
+% <= (Fc)y = -(Loa * (Fa)y + Lob * (Fb)y) / Ls
+% <= (Fc)z = -(Loa * (Fa)z + Lob * (Fb)z) / Ls
+% >> vFc = -(Loa * vFa + Lob * vFb) / Ls
 %
 vFc = -(Loa * vFa + Lob * vFb) / Ls;
 
@@ -154,50 +154,89 @@ vFc = -(Loa * vFa + Lob * vFb) / Ls;
 %
 vFo = -(vFa + vFb + vFc);
 
-
 x = linspace(0, Ls, 100);
 mV = V(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls]);
 mM = M(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls]);
 
 figure(1);
-plot(x, mV);
+plot( ...
+    x, mV(1, :), 'r', ...
+    x, mV(2, :), 'g', ...
+    x, mV(3, :), 'b' ...
+    );
 figure(2);
-plot(x, mM);
+plot( ...
+    x, mM(1, :), 'r', ...
+    x, mM(2, :), 'g', ...
+    x, mM(3, :), 'b' ...
+    );
 
 %% Shear Force Function
 % Shear force on the shaft can be expressed as the following function:
 %
 % V(x) = u(x)*vFo + u(x-Loa)*vFa + u(x-Lob)*vFb + u(x-Lob)*vFc
 % where u(t) = { t < 0: 1, 0 } (step function)
+% 
+% Matlab Implementation:
+%   By passing a scalar or row vector of positions and arrays representing 
+%   the point forces and their position along the beam, the function can 
+%   calculate the Shear Force for each position.
+% 
+% Arguments:
+%   svPos - Scalar or row vector (1 by N matrix) representing the position
+%           or positions to calcualte the shear force at.
+%   mF    - Array of column vectors which represent forces (looks like a matrix).
+%   vL    - Array of lengths representing locations of each point force.
+% Requirements:
+%   - All arguments must satisfy isnumeric.
+%   - The number of forces (column vectors) in mF must be equal to the
+%     number of lengths (scalars) in vL.
 %
-function result = V(position, array_of_forces, array_of_scalar_distances) 
+function r = V(pvPos, mF, vL) 
     arguments
-        position (1, :) {isnumeric},
-        array_of_forces (:, :) {isnumeric},
-        array_of_scalar_distances (1, :) {isnumeric}
+        pvPos (1, :) {isnumeric},
+        mF (:, :) {isnumeric},
+        vL (1, :) {isnumeric}
     end
-    result = 0;
-    for i = 1:size(array_of_forces, 2)
-        result = result + array_of_forces(:, i) * (position > array_of_scalar_distances(i));
+    assert(size(mF, 2) ~= size(vL, 1), "the number of forces must be equal to the number of lengths"); 
+    r = 0;
+    for i = 1:size(mF, 2)
+         r = r + mF(:, i) * (pvPos > vL(i));
     end
 end
 
-%% Shear Force Function
+%% Bending Force Function
 % Integrating the shear force function reveals the following:
 %  
 % M(x) = u(x)*x*vFo + u(x-Loa)*(x-Loa)*vFa + u(x-Lob)*(x-Lob)*vFb +
 % u(x-Ls)*(x-Ls)*vFc
 % where u(t) = { t < 0: 1, 0 } (step function)
 %
-function result = M(position, array_of_forces, array_of_scalar_distances) 
+% Matlab Implementation:
+%   By passing a scalar or row vector of positions and arrays representing 
+%   the point forces and their position along the beam, the function can 
+%   calculate the Shear Force for each position.
+% 
+% Arguments:
+%   svPos - Scalar or row vector (1 by N matrix) representing the position
+%           or positions to calcualte the bending moment at.
+%   mF    - Array of column vectors which represent forces (looks like a matrix).
+%   vL    - Array of lengths representing locations of each point force.
+% Requirements:
+%   - All arguments must satisfy isnumeric.
+%   - The number of forces (column vectors) in mF must be equal to the
+%     number of lengths (scalars) in vL.
+%
+function r = M(pvX, mF, vL) 
     arguments
-        position (1, :) {isnumeric},
-        array_of_forces (:, :) {isnumeric},
-        array_of_scalar_distances (1, :) {isnumeric}
+        pvX (1, :) {isnumeric},
+        mF (:, :) {isnumeric},
+        vL (1, :) {isnumeric}
     end
-    result = 0;
-    for i = 1:size(array_of_forces, 2)
-        result = result + array_of_forces(:, i) * ((position - array_of_scalar_distances(i)) .* (position > array_of_scalar_distances(i)));
+    assert(size(mF, 2) ~= size(vL, 1), "the number of forces must be equal to the number of lengths"); 
+    r = 0;
+    for i = 1:size(mF, 2)
+        r = r + mF(:, i) * ((pvX - vL(i)) .* (pvX > vL(i)));
     end
 end
 
