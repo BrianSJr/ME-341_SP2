@@ -4,6 +4,9 @@
 % Variable names that begin with no lower case letter or the letter "s" are scalars.
 % 
 
+% Youngs Modulus:
+E = 200.0E9;
+
 % Lengths (L):
 Loa = 0.40; % [m] Length from O to A.
 Lab = 0.35; % [m] Length from A to B.
@@ -180,8 +183,15 @@ plot( ...
     x, mT(3, :), 'b' ...
     );
 
+I = (0.25 * pi) * (0.5 * Ds) ^ 4;
 
-
+md = Deflect(2, x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls], E, I);
+figure(4);
+plot( ...
+    x, md(1, :), 'r', ...
+    x, md(2, :), 'g', ...
+    x, md(3, :), 'b' ...
+    );
 
 
 %% Shear Force Function
@@ -291,12 +301,39 @@ function r = T(pvX, mF, vL, vD)
     end
 end
 
+function r = Deflect(index, x, mF, vL, Es, Is)
+    Lof = vL(index);
+    Ls = vL(end);
+    % m = M(x, mF, vL) (3, 100)
+    % x (1, 100)
+    % 
+    % m * x
+    %
+    r = 0;
+    mM = M(x, mF, vL);
+
+    disp(Lof);
+    disp(Ls)
+
+    for i = 1:size(mM, 2)
+        %disp((x.^2 + Lof^2 - 2 * Ls * (Lof - (x > Lof) .* (Lof - x))));
+        r = r + (mM(:, i) / (6 * Es * Is)) * (x.^2 + Lof^2 - 2 * Ls * (Lof - (x > Lof) .* (Lof - x)));
+    end
+end
+
 %% TODO:
 % Angular of Twist function (AoT(L, T...))
 % Polar Moment of Inertia (PMoI(...))
 
 
 
+% 
+%
+% Yab= ((F*Lb*x) / (6*E*I*Ls)) * (x^2 + Lb^2 - Ls^2)
+% Ybc= ((F*La*(Ls - x)) / (6*E*I*Ls)) * (x^2 + Lb^2 - 2*Ls*x)
+% <= M = (F*Lb*x) / Ls) maybe
+% 
+%
 
 
 
