@@ -157,6 +157,9 @@ vFo = -(vFa + vFb + vFc);
 x = linspace(0, Ls, 100);
 mV = V(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls]);
 mM = M(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls]);
+mT = T(x, [vFa, vFb], [Loa, Lob], [Da, Db]);
+
+
 
 figure(1);
 plot( ...
@@ -170,6 +173,16 @@ plot( ...
     x, mM(2, :), 'g', ...
     x, mM(3, :), 'b' ...
     );
+figure(3);
+plot( ...
+    x, mT(1, :), 'r', ...
+    x, mT(2, :), 'g', ...
+    x, mT(3, :), 'b' ...
+    );
+
+
+
+
 
 %% Shear Force Function
 % Shear force on the shaft can be expressed as the following function:
@@ -234,13 +247,53 @@ function r = M(pvX, mF, vL)
         vL (1, :) {isnumeric}
     end
     assert(size(mF, 2) ~= size(vL, 1), "the number of forces must be equal to the number of lengths"); 
+   
     r = 0;
     for i = 1:size(mF, 2)
         r = r + mF(:, i) * ((pvX - vL(i)) .* (pvX > vL(i)));
     end
 end
 
+%% Torque Function
+% Taking the cross product at each gear radius and force according to
+% length yeilds the following:
+%  
+% T(x) = u(x-Loa) * (Da/2)j x vFa + u(x-Lob) * (Db/2)j x vFb
+% where u(t) = { t < 0: 1, 0 } (step function)
+%
+% Matlab Implementation:
+%   By passing a scalar or row vector of positions and arrays representing 
+%   the point forces and their position along the beam, the function can 
+%   calculate the Shear Force for each position.
+% 
+% Arguments:
+%   svPos - Scalar or row vector (1 by N matrix) representing the position
+%           or positions to calcualte the torque at.
+%   mF    - Array of column vectors which represent forces (looks like a matrix).
+%   vL    - Array of lengths representing locations of each point force.
+% Requirements:
+%   - All arguments must satisfy isnumeric.
+%   - The number of forces (column vectors) in mF must be equal to the
+%     number of lengths (scalars) in vL.
+%
+function r = T(pvX, mF, vL, vD)
+    arguments
+        pvX (1, :) {isnumeric},
+        mF (:, :) {isnumeric},
+        vL (1, :) {isnumeric},
+        vD (1, :) {isnumeric}
+    end
+    assert(size(mF, 2) ~= size(vL, 1), "the number of forces must be equal to the number of lengths");
+    assert(size(mF, 2) ~= size(vL, 1), "the number of forces must be equal to the number of diameters");
+    r = 0;
+    for i = 1:size(mF, 2)
+        r = r + cross([0.0; 0.5 * vD(i); 0.0], mF(:, i)) * (pvX > vL(i));
+    end
+end
 
+%% TODO:
+% Angular of Twist function (AoT(L, T...))
+% Polar Moment of Inertia (PMoI(...))
 
 
 
