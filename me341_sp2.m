@@ -2,7 +2,7 @@
 % Variable names that begin with lower case letter "v" are vectors.
 % Variable names that begin with lower case letter "m" are matrices.
 % Variable names that begin with no lower case letter or the letter "s" are scalars.
-% 
+%  
 
 % Youngs Modulus:
 E = 200.0E9;
