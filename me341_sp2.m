@@ -165,11 +165,15 @@ mT = T(x, [vFa, vFb], [Loa, Lob], [Da, Db]);
 
 
 figure(1);
+title("Shear Force");
 plot( ...
     x, mV(1, :), 'r', ...
     x, mV(2, :), 'g', ...
     x, mV(3, :), 'b' ...
     );
+xlabel("x (m)");
+ylabel("(V)xyz (N)");
+
 figure(2);
 plot( ...
     x, mM(1, :), 'r', ...
@@ -185,14 +189,67 @@ plot( ...
 
 I = (0.25 * pi) * (0.5 * Ds) ^ 4;
 
-md = Deflect(2, x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls], E, I);
+md2 = Deflect(2, x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls], E, I);
+md3 = Deflect(3, x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls], E, I);
+
+
+md = md2 + md3;
+
+dt = sqrt(sum(md.^2, 1));
+
+md4 = Deflect_s(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls], E, I);
+dt2 = sqrt(sum(md4.^2, 1));
+
+figure(7);
+plot(x, dt);
+
+figure(8)
+plot(x, dt2);
+
 figure(4);
+plot( ...
+    x, md2(1, :), 'r', ...
+    x, md2(2, :), 'g', ...
+    x, md2(3, :), 'b' ...
+    );
+
+figure(5);
+plot( ...
+    x, md3(1, :), 'r', ...
+    x, md3(2, :), 'g', ...
+    x, md3(3, :), 'b' ...
+    );
+
+figure(6);
 plot( ...
     x, md(1, :), 'r', ...
     x, md(2, :), 'g', ...
     x, md(3, :), 'b' ...
     );
 
+mw = w(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls]);
+
+figure(12)
+plot( ...
+    x, mw(1, :), 'r', ...
+    x, mw(2, :), 'g', ...
+    x, mw(3, :), 'b' ...
+    );
+
+
+
+%% Load Force Function
+function r = w(pvX, mF, vL)
+    arguments
+        pvX (1, :) {isnumeric},
+        mF (:, :) {isnumeric},
+        vL (1, :) {isnumeric}
+    end
+    r = 0;   
+    for i = 1:size(mF, 2)
+        r = r + mF(:, i) * (pvX == vL(i));
+    end
+end
 
 %% Shear Force Function
 % Shear force on the shaft can be expressed as the following function:
@@ -215,22 +272,22 @@ plot( ...
 %   - The number of forces (column vectors) in mF must be equal to the
 %     number of lengths (scalars) in vL.
 %
-function r = V(pvPos, mF, vL) 
+function r = V(pvX, mF, vL) 
     arguments
-        pvPos (1, :) {isnumeric},
+        pvX (1, :) {isnumeric},
         mF (:, :) {isnumeric},
         vL (1, :) {isnumeric}
     end
     assert(size(mF, 2) ~= size(vL, 1), "the number of forces must be equal to the number of lengths"); 
-    r = 0;
+    r = 0; 
     for i = 1:size(mF, 2)
-         r = r + mF(:, i) * (pvPos > vL(i));
+         r = r + mF(:, i) * (pvX > vL(i));
     end
 end
 
 %% Bending Force Function
 % Integrating the shear force function reveals the following:
-%  
+% 
 % M(x) = u(x)*x*vFo + u(x-Loa)*(x-Loa)*vFa + u(x-Lob)*(x-Lob)*vFb +
 % u(x-Ls)*(x-Ls)*vFc
 % where u(t) = { t < 0: 1, 0 } (step function)
@@ -301,24 +358,19 @@ function r = T(pvX, mF, vL, vD)
     end
 end
 
-function r = Deflect(index, x, mF, vL, Es, Is)
-    Lof = vL(index);
+function r = Deflect(index, pvX, mF, vL, Es, Is)
     Ls = vL(end);
-    % m = M(x, mF, vL) (3, 100)
-    % x (1, 100)
-    % 
-    % m * x
-    %
+    Lof = vL(index);
+    mM = M(pvX, mF, vL);
+    r = (mM / (6 * Es * Is)) .* (ones(3, 1) * (pvX .^ 2 + Lof^2 - 2 * Ls * (Lof - (pvX > Lof) .* (Lof - pvX))));
+end
+
+function r = Deflect_s(pvX, mF, vL, Es, Is) 
     r = 0;
-    mM = M(x, mF, vL);
-
-    disp(Lof);
-    disp(Ls)
-
-    for i = 1:size(mM, 2)
-        %disp((x.^2 + Lof^2 - 2 * Ls * (Lof - (x > Lof) .* (Lof - x))));
-        r = r + (mM(:, i) / (6 * Es * Is)) * (x.^2 + Lof^2 - 2 * Ls * (Lof - (x > Lof) .* (Lof - x)));
+    for i = 1:size(mF, 2)
+        r = r + mF(:, i) * (((pvX - vL(i)) .^ 3) .* (pvX > vL(i)));
     end
+    r = r * 1 / (6 * Es * Is);
 end
 
 %% TODO:
