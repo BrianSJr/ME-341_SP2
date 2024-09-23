@@ -5,22 +5,22 @@
 %  
 
 % Youngs Modulus:
-E = 200.0E9;
+E = 200.0;
 
 % Lengths (L):
-Loa = 0.40; % [m] Length from O to A.
-Lab = 0.35; % [m] Length from A to B.
-Lbc = 0.30; % [m] Length from B to C.
+Loa = 400.0; % [m] Length from O to A.
+Lab = 350.0; % [m] Length from A to B.
+Lbc = 300.0; % [m] Length from B to C.
 Lob = Loa + Lab; % [m] Length from O to B.
 Ls  = Lob + Lbc; % [m] Length from O to C (the whole shaft).
 
 % Diameters (D):
-Da  = 0.6; % [m] Diameter of gear A.
-Db  = 0.3; % [m] Diameter of gear B.
-Ds  = 0.05; % [m] Diameter of shaft.
+Da  = 600.0; % [m] Diameter of gear A.
+Db  = 300.0; % [m] Diameter of gear B.
+Ds  = 50.0; % [m] Diameter of shaft.
 
 % Forces (F):
-Fa  = 11000.0; % [N] Magnitude of Fa.
+Fa  = 11.0; % [N] Magnitude of Fa.
 
 % Angles (A)
 Aa  = deg2rad(20.0); % [rads] (20 degress) CW from +z-axis about the x-axis.
@@ -189,54 +189,24 @@ plot( ...
 
 I = (0.25 * pi) * (0.5 * Ds) ^ 4;
 
-md2 = Deflect(2, x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls], E, I);
-md3 = Deflect(3, x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls], E, I);
+mY = Ysp(x, [vFa, vFb], [Loa, Lob], Ls, E, I);
 
-
-md = md2 + md3;
-
-dt = sqrt(sum(md.^2, 1));
-
-md4 = Deflect_s(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls], E, I);
-dt2 = sqrt(sum(md4.^2, 1));
-
-figure(7);
-plot(x, dt);
-
-figure(8)
-plot(x, dt2);
 
 figure(4);
 plot( ...
-    x, md2(1, :), 'r', ...
-    x, md2(2, :), 'g', ...
-    x, md2(3, :), 'b' ...
-    );
+   x, mY(1, :), 'r', ...
+   x, mY(2, :), 'g', ...
+   x, mY(3, :), 'b' ...
+   );
+
+mYs = Ys(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls], E, I);
 
 figure(5);
 plot( ...
-    x, md3(1, :), 'r', ...
-    x, md3(2, :), 'g', ...
-    x, md3(3, :), 'b' ...
-    );
-
-figure(6);
-plot( ...
-    x, md(1, :), 'r', ...
-    x, md(2, :), 'g', ...
-    x, md(3, :), 'b' ...
-    );
-
-mw = w(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls]);
-
-figure(12)
-plot( ...
-    x, mw(1, :), 'r', ...
-    x, mw(2, :), 'g', ...
-    x, mw(3, :), 'b' ...
-    );
-
-
+   x, mYs(1, :), 'r', ...
+   x, mYs(2, :), 'g', ...
+   x, mYs(3, :), 'b' ...
+   );
 
 %% Load Force Function
 function r = w(pvX, mF, vL)
@@ -358,34 +328,50 @@ function r = T(pvX, mF, vL, vD)
     end
 end
 
-function r = Deflect(index, pvX, mF, vL, Es, Is)
-    Ls = vL(end);
-    Lof = vL(index);
-    mM = M(pvX, mF, vL);
-    r = (mM / (6 * Es * Is)) .* (ones(3, 1) * (pvX .^ 2 + Lof^2 - 2 * Ls * (Lof - (pvX > Lof) .* (Lof - pvX))));
+function r = Ysp(pvX, mF, vL, Ls, Es, Is)
+    arguments
+        pvX (1, :) {isnumeric},
+        mF (:, :) {isnumeric},
+        vL (1, :) {isnumeric},
+        Ls (1, 1) {isnumeric},
+        Es (1, 1) {isnumeric},
+        Is (1, 1) {isnumeric}
+    end
+    assert(size(mF, 2) ~= size(vL, 1), "the number of forces must be equal to the number of lengths");
+    r = 0;
+    pvXsqrd = pvX .^ 2;
+    Lssqrd = Ls ^ 2;
+    for i = 1:size(mF, 2)
+        Hx = pvX > vL(i);
+        Lof = vL(i);
+        Lfc = Ls - Lof; 
+        r = r - mF(:, i) * ((~Hx) .* pvX .* (Lfc * (pvXsqrd + Lfc ^ 2 - Lssqrd)) + Hx .* (Ls - pvX) .* (Lof * (pvXsqrd + Lof ^ 2 - 2 * Ls * pvX)));
+    end
+    r = r * 1 / (6 * Es * Is * Ls);
 end
 
-function r = Deflect_s(pvX, mF, vL, Es, Is) 
+function r = Ys(pvX, mF, vL, Es, Is) 
+   arguments
+        pvX (1, :) {isnumeric},
+        mF (:, :) {isnumeric},
+        vL (1, :) {isnumeric},
+        Es (1, 1) {isnumeric},
+        Is (1, 1) {isnumeric}
+    end
+    assert(size(mF, 2) ~= size(vL, 1), "the number of forces must be equal to the number of lengths");
     r = 0;
     for i = 1:size(mF, 2)
         r = r + mF(:, i) * (((pvX - vL(i)) .^ 3) .* (pvX > vL(i)));
     end
-    r = r * 1 / (6 * Es * Is);
-end
+    r = r - (mF(:, 1:(end - 1)) * transpose((vL(end) - vL(1:(end - 1))) .^ 3)) * pvX / vL(end);
+    r = r * 1 / (6 * Es * Is);  
+end 
+
 
 %% TODO:
 % Angular of Twist function (AoT(L, T...))
 % Polar Moment of Inertia (PMoI(...))
 
-
-
-% 
-%
-% Yab= ((F*Lb*x) / (6*E*I*Ls)) * (x^2 + Lb^2 - Ls^2)
-% Ybc= ((F*La*(Ls - x)) / (6*E*I*Ls)) * (x^2 + Lb^2 - 2*Ls*x)
-% <= M = (F*Lb*x) / Ls) maybe
-% 
-%
 
 
 
