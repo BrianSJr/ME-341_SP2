@@ -17,7 +17,7 @@ Ls  = Lob + Lbc; % [m] Length from O to C (the whole shaft).
 % Diameters (D):
 Da  = 0.6; % [m] Diameter of gear A.
 Db  = 0.3; % [m] Diameter of gear B.
-Ds  = 0.05; % [m] Diameter of shaft.
+Ds  = 0.10179; % [m] Diameter of shaft.
 
 % Forces (F):
 Fa  = 11000.0; % [N] Magnitude of Fa.
@@ -181,7 +181,7 @@ dx = (Ls)/(1.0*length(x));
 
 
 theta_xy = zeros(length(x), 1);
-%theta_0=-P*a*b(L+b)/(6EIL)
+%theta_0=-P*a*b(L+b)/(6EIL) 
 theta_0_xy = (vFa(2)*Loa*(Lab+Lbc)*(Ls+Lab+Lbc) + vFb(2)*(Loa+Lab)*Lbc*(Ls+Lbc)) / (6 * E * I * Ls);
 disp(theta_0_xy)
 theta_xy(1) = theta_0_xy;
@@ -253,6 +253,130 @@ xaxis = yline(0);
 xlabel("x (m)");
 ylabel("z (m)");
 hold off
+
+
+%SOLVE FOR THE MINIMUM SHAFT DIAMETER FOR 0.06deg SLOPE
+
+%this code specifically analyzes POINT C as this is where the slope is
+%worst
+
+%solve for the minimum diameter
+I = (0.25 * pi) * (0.5 * Ds) ^ 4;
+disp(1.0*length(x));
+dx = (Ls)/(1.0*length(x));
+
+
+theta_xy = zeros(length(x), 1);
+%theta_0=-P*a*b(L+b)/(6EIL) 
+theta_0_xy = (vFa(2)*Loa*(Lab+Lbc)*(Ls+Lab+Lbc) + vFb(2)*(Loa+Lab)*Lbc*(Ls+Lbc)) / (6 * E * I * Ls);
+disp(theta_0_xy)
+theta_xy(1) = theta_0_xy;
+theta_xy_running = theta_0_xy; %"running" holds the integral sum of the code
+
+y_running = 0;
+y_xy = zeros(length(x),1); %saves the integral sum for each x value
+
+for i = 2:length(x)
+    theta_xy_running = theta_xy_running + (mM(2, i)*dx)/(E*I); % integral(M(x)/EI, dx)
+    theta_xy(i) = theta_xy_running;
+
+    y_running = y_running + theta_xy_running*dx; % integral(theta(x), dx)
+    y_xy(i) = y_running;
+end
+
+d_h = 1;
+d_l = Ds;
+
+while(abs(d_h-d_l) > 0.00000001)
+
+    m = (d_h + d_l) * 0.5;
+    if(m == 0)
+        b = 0;
+        break;
+    end
+
+    %calculate for high bound
+    I = (0.25 * pi) * (0.5 * d_l) ^ 4;
+
+    theta_xy_low = zeros(length(x), 1);
+    theta_0_xy = (vFa(2)*Loa*(Lab+Lbc)*(Ls+Lab+Lbc) + vFb(2)*(Loa+Lab)*Lbc*(Ls+Lbc)) / (6 * E * I * Ls);
+    theta_xy_low(1) = theta_0_xy;
+    theta_xy_running = theta_0_xy; %"running" holds the integral sum of the code
+    y_running = 0;
+    y_xy_low = zeros(length(x),1); %saves the integral sum for each x value
+
+    for i = 2:length(x)
+        theta_xy_running = theta_xy_running + (mM(2, i)*dx)/(E*I); % integral(M(x)/EI, dx)
+        theta_xy_low(i) = theta_xy_running;
+    
+        y_running = y_running + theta_xy_running*dx; % integral(theta(x), dx)
+        y_xy(i) = y_running;
+    end
+
+    theta_zx_low = zeros(length(x), 1);
+    
+    theta_0_zx = (-vFa(3)*Loa*(Lab+Lbc)*(Ls+Lab+Lbc) - vFb(3)*(Loa+Lab)*Lbc*(Ls+Lbc)) / (6 * E * I * Ls);
+    disp(theta_0_zx)
+    theta_zx_low(1) = theta_0_zx;
+    theta_zx_running = theta_0_zx;
+    
+    z_running = 0;
+    z_zx = zeros(length(x),1);
+    
+    for i = 2:length(x)
+        theta_zx_running = theta_zx_running + (mM(3, i)*dx)/(E*I);
+        theta_zx_low(i) = theta_zx_running;
+    
+        z_running = z_running + theta_zx_running*dx;
+        z_zx(i) = z_running;
+    end
+
+    %calculate low bound
+    I = (0.25 * pi) * (0.5 * m) ^ 4;
+
+    theta_xy_high = zeros(length(x), 1);
+    theta_0_xy = (vFa(2)*Loa*(Lab+Lbc)*(Ls+Lab+Lbc) + vFb(2)*(Loa+Lab)*Lbc*(Ls+Lbc)) / (6 * E * I * Ls);
+    theta_xy_high(1) = theta_0_xy;
+    theta_xy_running = theta_0_xy; %"running" holds the integral sum of the code
+    y_xy_high = zeros(length(x),1);
+
+    for i = 2:length(x)
+        theta_xy_running = theta_xy_running + (mM(2, i)*dx)/(E*I); % integral(M(x)/EI, dx)
+        theta_xy_high(i) = theta_xy_running;
+    
+        y_running = y_running + theta_xy_running*dx; % integral(theta(x), dx)
+        y_xy(i) = y_running;
+    end
+
+    theta_zx_high = zeros(length(x), 1);
+    
+    theta_0_zx = (-vFa(3)*Loa*(Lab+Lbc)*(Ls+Lab+Lbc) - vFb(3)*(Loa+Lab)*Lbc*(Ls+Lbc)) / (6 * E * I * Ls);
+    disp(theta_0_zx)
+    theta_zx_high(1) = theta_0_zx;
+    theta_zx_running = theta_0_zx;
+    
+    z_running = 0;
+    z_zx = zeros(length(x),1);
+    
+    for i = 2:length(x)
+        theta_zx_running = theta_zx_running + (mM(3, i)*dx)/(E*I);
+        theta_zx_high(i) = theta_zx_running;
+    
+        z_running = z_running + theta_zx_running*dx;
+        z_zx(i) = z_running;
+    end
+
+    % 0.06 deg = 0.001047198 rad
+    %use pythagorean theorem to get deflection in both directions 
+    if(((theta_xy_low(length(x))^2 + (theta_zx_low(length(x))^2))^0.5 - 0.001047198) * (((theta_xy_high(length(x)))^2 + (theta_zx_high(length(x))^2))^0.5 - 0.001047198) < 0)
+        d_h = m;
+    else
+        d_l = m;
+    end
+end
+
+disp("Minumum diameter for deflection " + num2str(d_h));
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %END STUFF DANIEL CHANGED
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
