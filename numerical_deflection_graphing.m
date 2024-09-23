@@ -17,7 +17,7 @@ Ls  = Lob + Lbc; % [m] Length from O to C (the whole shaft).
 % Diameters (D):
 Da  = 0.6; % [m] Diameter of gear A.
 Db  = 0.3; % [m] Diameter of gear B.
-Ds  = 0.10179; % [m] Diameter of shaft.
+Ds  = 0.05; % [m] Diameter of shaft.
 
 % Forces (F):
 Fa  = 11000.0; % [N] Magnitude of Fa.
