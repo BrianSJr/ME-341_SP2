@@ -176,14 +176,14 @@ mT = T(x, [vFa, vFb], [Loa, Lob], [Da, Db]);
 mM(3, :) = -1*mM(3, :); %flip the mM graph going forward
 
 I = (0.25 * pi) * (0.5 * Ds) ^ 4;
-disp(1.0*length(x));
+disp("Number of numerical steps: " + 1.0*length(x));
 dx = (Ls)/(1.0*length(x));
 
 
 theta_xy = zeros(length(x), 1);
 %theta_0=-P*a*b(L+b)/(6EIL) 
 theta_0_xy = (vFa(2)*Loa*(Lab+Lbc)*(Ls+Lab+Lbc) + vFb(2)*(Loa+Lab)*Lbc*(Ls+Lbc)) / (6 * E * I * Ls);
-disp(theta_0_xy)
+disp("theta xy initial condition: " + theta_0_xy)
 theta_xy(1) = theta_0_xy;
 theta_xy_running = theta_0_xy; %"running" holds the integral sum of the code
 
@@ -202,7 +202,7 @@ end
 theta_zx = zeros(length(x), 1);
 
 theta_0_zx = (-vFa(3)*Loa*(Lab+Lbc)*(Ls+Lab+Lbc) - vFb(3)*(Loa+Lab)*Lbc*(Ls+Lbc)) / (6 * E * I * Ls);
-disp(theta_0_zx)
+disp("theta zx initial condition: " + theta_0_zx)
 theta_zx(1) = theta_0_zx;
 theta_zx_running = theta_0_zx;
 
@@ -217,10 +217,10 @@ for i = 2:length(x)
     z_zx(i) = z_running;
 end
 
-%figures in the 100's are graph the numerical step approximation
+%figures in the 100's graph the numerical step approximation
 figure(100);
 hold on
-title("theta xy");
+title("theta xy (num. approx.)");
 plot(x, theta_xy);
 xaxis = yline(0);
 xlabel("x (m)");
@@ -229,7 +229,7 @@ hold off
 
 figure(101);
 hold on
-title("y deflection");
+title("y deflection (num. approx.)");
 plot(x, y_xy);
 xaxis = yline(0);
 xlabel("x (m)");
@@ -238,7 +238,7 @@ hold off
 
 figure(102);
 hold on
-title("theta zx");
+title("theta zx (num. approx.)");
 plot(x, -theta_zx);
 xaxis = yline(0);
 xlabel("x (m)");
@@ -247,7 +247,7 @@ hold off
 
 figure(103);
 hold on
-title("z deflection");
+title("z deflection (num. approx.)");
 plot(x, -z_zx);
 xaxis = yline(0);
 xlabel("x (m)");
@@ -256,20 +256,18 @@ hold off
 
 
 %SOLVE FOR THE MINIMUM SHAFT DIAMETER FOR 0.06deg SLOPE
-
+%
 %this code specifically analyzes POINT C as this is where the slope is
-%worst
-
+%   worst case
+%
 %solve for the minimum diameter
 I = (0.25 * pi) * (0.5 * Ds) ^ 4;
-disp(1.0*length(x));
 dx = (Ls)/(1.0*length(x));
 
 
 theta_xy = zeros(length(x), 1);
 %theta_0=-P*a*b(L+b)/(6EIL) 
 theta_0_xy = (vFa(2)*Loa*(Lab+Lbc)*(Ls+Lab+Lbc) + vFb(2)*(Loa+Lab)*Lbc*(Ls+Lbc)) / (6 * E * I * Ls);
-disp(theta_0_xy)
 theta_xy(1) = theta_0_xy;
 theta_xy_running = theta_0_xy; %"running" holds the integral sum of the code
 
@@ -316,7 +314,6 @@ while(abs(d_h-d_l) > 0.00000001)
     theta_zx_low = zeros(length(x), 1);
     
     theta_0_zx = (-vFa(3)*Loa*(Lab+Lbc)*(Ls+Lab+Lbc) - vFb(3)*(Loa+Lab)*Lbc*(Ls+Lbc)) / (6 * E * I * Ls);
-    disp(theta_0_zx)
     theta_zx_low(1) = theta_0_zx;
     theta_zx_running = theta_0_zx;
     
@@ -351,7 +348,6 @@ while(abs(d_h-d_l) > 0.00000001)
     theta_zx_high = zeros(length(x), 1);
     
     theta_0_zx = (-vFa(3)*Loa*(Lab+Lbc)*(Ls+Lab+Lbc) - vFb(3)*(Loa+Lab)*Lbc*(Ls+Lbc)) / (6 * E * I * Ls);
-    disp(theta_0_zx)
     theta_zx_high(1) = theta_0_zx;
     theta_zx_running = theta_0_zx;
     
