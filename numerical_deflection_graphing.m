@@ -173,7 +173,7 @@ mV = V(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls]);
 mM = M(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls]);
 mT = T(x, [vFa, vFb], [Loa, Lob], [Da, Db]);
 
-mM(3, :) = -1*mM(3, :); %flip the mM graph going forward
+flipped_mM3 = -1*mM(3, :); %flip the mM graph going forward
 
 I = (0.25 * pi) * (0.5 * Ds) ^ 4;
 disp("Number of numerical steps: " + 1.0*length(x));
@@ -210,7 +210,7 @@ z_running = 0;
 z_zx = zeros(length(x),1);
 
 for i = 2:length(x)
-    theta_zx_running = theta_zx_running + (mM(3, i)*dx)/(E*I);
+    theta_zx_running = theta_zx_running + (flipped_mM3(i)*dx)/(E*I);
     theta_zx(i) = theta_zx_running;
 
     z_running = z_running + theta_zx_running*dx;
@@ -321,7 +321,7 @@ while(abs(d_h-d_l) > 0.00000001)
     z_zx = zeros(length(x),1);
     
     for i = 2:length(x)
-        theta_zx_running = theta_zx_running + (mM(3, i)*dx)/(E*I);
+        theta_zx_running = theta_zx_running + (flipped_mM3(i)*dx)/(E*I);
         theta_zx_low(i) = theta_zx_running;
     
         z_running = z_running + theta_zx_running*dx;
@@ -355,7 +355,7 @@ while(abs(d_h-d_l) > 0.00000001)
     z_zx = zeros(length(x),1);
     
     for i = 2:length(x)
-        theta_zx_running = theta_zx_running + (mM(3, i)*dx)/(E*I);
+        theta_zx_running = theta_zx_running + (flipped_mM3(i)*dx)/(E*I);
         theta_zx_high(i) = theta_zx_running;
     
         z_running = z_running + theta_zx_running*dx;
@@ -395,7 +395,7 @@ title("Bending Moment");
 plot( ...
     x, mM(1, :), 'r', ...
     x, mM(2, :), 'g', ...
-    x, mM(3, :), 'b' ...
+    x, -mM(3, :), 'b' ...
     );
 xlabel("x (m)");
 ylabel("(M)xyz (Nm)");
