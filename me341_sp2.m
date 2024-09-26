@@ -5,7 +5,6 @@
 %  
 
 %% TODO:
-% 1. Create method of super positions for slope formula.
 % 2. Document remaining functions:
 %   - Bending Moment
 %   - Torque 
@@ -18,8 +17,6 @@
 %   - Deflection (Superposition)
 %   - Slope (Singularity)
 %   - Slope (Superposition)
-% 4. Update Desmos graph for hand-calc:
-%   https://www.desmos.com/calculator/poffaocl4x
 %
 
 %% Program Settings:
@@ -236,12 +233,18 @@ x = linspace(0, Ls, DIAGRAM_SAMPLES); % points along the x axis.
 
 mV = V(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls]);             % Shear Forces
 mM = M(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls]);             % Bending Moments
+
+disp(M(Loa, [vFo(2), vFa(2), vFb(2), vFc(2)], [0, Loa, Lob, Ls]));
+
 mT = T(x, [vFa, vFb], [Loa, Lob], [Da, Db]);                    % Torques
 
 mYsp = Ysp(x, [vFa, vFb], [Loa, Lob], Ls, E, I);                % Deflection (Superposition)
 mYs  = Ys(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls], E, I);    % Deflection (Singularity)
 
+mSsp = Ssp(x, [vFa, vFb], [Loa, Lob], Ls, E, I);
 mSs = Ss(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls], E, I); 
+
+
 
 figure(1);
 tiledlayout(3, 1);
@@ -286,6 +289,10 @@ plot( ...
    x, mYsp(2, :), 'g', ...
    x, mYsp(3, :), 'b' ...
    );
+title("Deflection (Super Position)");
+xlabel("x (mm)");
+ylabel("Y (mm)");
+
 figure(5);
 plot( ...
    x, mYs(1, :), 'r', ...
@@ -293,6 +300,12 @@ plot( ...
    x, mYs(3, :), 'b' ...
    );
 figure(6);
+plot( ...
+   x, mSsp(1, :), 'r', ...
+   x, mSsp(2, :), 'g', ...
+   x, mSsp(3, :), 'b' ...
+   );
+figure(7);
 plot( ...
    x, mSs(1, :), 'r', ...
    x, mSs(2, :), 'g', ...
@@ -377,11 +390,92 @@ function r = V(svX, mF, vL)
     assert(size(mF, 2) ~= size(vL, 1), "the number of forces must be equal to the number of lengths"); 
     r = 0; 
     for i = 1:size(mF, 2)
-         r = r + mF(:, i) * (svX > vL(i));
+        r = r + mF(:, i) * (svX > vL(i));
     end
 end
 
+
+% Explanation:
+% Using singularity functions we can express our load function as:
+%
+%
+% vw(x) = vFo*<x>^(-1) + vFa*<x-Loa>^(-1) + vFb*<x-Lob>^(-1) + vFc*<x-Ls>^(-1).
+% 
+%
+% Singularity Functions:
+%
+%
+% <= <x-a>ⁿ = { δ{|n+1|}(x-a)  when n <  0 } 
+%             { (x-a)ⁿH(x-a)   when n >= 0 }
+% Where δ{i}(x) is the i-th derivative of the dirac delta function. 
+% (eg. i=0 --> δ(x), i=1 --> δ'(x), i=2 --> δ''(x), ...). Note |n+1| in the 
+% formula when applying it.     
+%
+% <= δ(x)   = { 0   when x <  0 }
+%             { 1   when x >= 0 }
+%           
+% <= H(x)   = { 1   when x == 0 }
+%             { 0   when x != 0 } 
+%
+% Integrating vw(x) yeilds the following:
+% 
+%         ⌠             ⌠                ⌠                    ⌠                    ⌠
+% vV(x) = ⌡vw(x)dx = vFo⌡<x>^(-1)dx + vFa⌡<x-Loa>^(-1)dx + vFb⌡<x-Lob>^(-1)dx + vFc⌡<x-Ls>^(-1)dx.
+%
+%    ⌠           { < x - a >^(n+1)          when n <  0 }
+% <= ⌡<x-a>ⁿdx = { < x - a >^(n+1)/(n+1)    when n >= 0 }
+%
+%      ⌠
+%   >> ⌡<x-a>^(-1) = <x-a>^0
+%
+% => vV(x) = vFo<x>^0 + vFa<x-Loa>^0 + vFb<x-Lob>^0 + vFc<x-Ls>^0 + vCv
+% => vV(x) = vFo*H(x) + vFa*H(x-Loa) + vFb*H(x-Lob) + vFc*H(x-Ls) + vCv
+%
+%   >> V(x) = vFo*H(x) + vFa*H(x-Loa) + vFb*H(x-Lob) + vFc*H(x-Ls) + vCv
+%
+% Solve for when V(0) = 0i + 0j + 0k:
+% 
+%
+% => vV(0) = vFo*H(0) + vFa*H(0-Loa) + vFb*H(0-Lob) + vFc*H(0-Ls) + vCv = 0i + 0j + 0k
+%
+% <= H(0)     = 0
+% <= H(0-Loa) = H(-Loa) = 0
+% <= H(0-Lob) = H(-Lob) = 0
+% <= H(0-Ls)  = H(0)    = 0
+%
+% => vV(0) = vFo*(0) + vFa*(0) + vFb*(0) + vFc*(0) + vCv = 0i + 0j + 0k
+% 
+%   >> vCv   = 0i + 0j + 0k
+%   >> vV(x) = vFo*H(x) + vFa*H(x-Loa) + vFb*H(x-Lob) + vFc*H(x-Ls)
+%
+% Matlab Implementation:
+%   By passing a scalar or row vector of positions and arrays representing 
+%   the point forces and their position along the beam, the function can 
+%   calculate the Shear Force for each position.
+% 
+% Arguments:
+%   svX - Scalar or row vector (1 by N matrix) representing the position
+%         or positions to calcualte the shear force at.
+%   mF  - Array of column vectors which represent forces (looks like a matrix).
+%   vL  - Array of lengths representing locations of each point force.
+% Requirements:
+%   - All arguments must satisfy isnumeric.
+%   - The number of forces (column vectors) in mF must be equal to the
+%     number of lengths (scalars) in vL.
+%
+
+
+
+
 %% Bending Force Function  vv needs doc update vv
+% Recall our shear force function vV(x) with the singularity function definition:
+%
+%   >> vV(x) = vFo<x>^0 + vFa<x-Loa>^0 + vFb<x-Lob>^0 + vFc<x-Ls>^0 + vCv
+% 
+% Integrating the shear force function yeilds the following:
+%
+% 
+%
 % Integrating the shear force function reveals the following:
 % 
 % M(x) = u(x)*x*vFo + u(x-Loa)*(x-Loa)*vFa + u(x-Lob)*(x-Lob)*vFb +
@@ -410,10 +504,17 @@ function r = M(pvX, mF, vL)
         vL (1, :) {isnumeric}
     end
     assert(size(mF, 2) ~= size(vL, 1), "the number of forces must be equal to the number of lengths"); 
-   
+    assert(size(mF, 1) == 1 || size(mF, 1) == 3, "must be 3D or 1D");
     r = 0;
-    for i = 1:size(mF, 2)
-        r = r + mF(:, i) * ((pvX - vL(i)) .* (pvX > vL(i)));
+    disp(size(mF))
+    if(size(mF, 1))
+        for i = 1:size(mF, 2)
+            r = r + mF(:,i) * ((pvX - vL(i)) .* (pvX > vL(i)));
+        end
+    else
+        for i = 1:size(mF, 2)
+            r = r + transpose(cross([1.0, 0.0, 0.0], mF(:, i))) * ((pvX - vL(i)) .* (pvX > vL(i)));
+        end
     end
 end
 
@@ -447,7 +548,7 @@ function r = T(pvX, mF, vL, vD)
         vD (1, :) {isnumeric}
     end
     assert(size(mF, 2) ~= size(vL, 1), "the number of forces must be equal to the number of lengths");
-    assert(size(mF, 2) ~= size(vL, 1), "the number of forces must be equal to the number of diameters");
+    assert(size(mF, 1) == 1 || size(mF, 1) == 3, "must be 3D or 1D");
     r = 0;
     for i = 1:size(mF, 2)
         r = r + cross([0.0; 0.5 * vD(i); 0.0], mF(:, i)) * (pvX > vL(i));
@@ -499,6 +600,27 @@ end
 
 %% Slope Function (Method of Superposition)
 % vv not implemented (duh) vv
+function r = Ssp(pvX, mF, vL, Ls, Es, Is)
+    arguments
+        pvX (1, :) {isnumeric},
+        mF (:, :) {isnumeric},
+        vL (1, :) {isnumeric},
+        Ls (1, 1) {isnumeric},
+        Es (1, 1) {isnumeric},
+        Is (1, 1) {isnumeric}
+    end
+    assert(size(mF, 2) ~= size(vL, 1), "the number of forces must be equal to the number of lengths");
+    r = 0;
+    pvXsqrd = pvX .^ 2;
+    Lssqrd = Ls ^ 2;
+    for i = 1:size(mF, 2)
+        Hx = pvX > vL(i);
+        Lof = vL(i);
+        Lfc = Ls - Lof; 
+        r = r - mF(:, i) * ((~Hx) .* (Lfc * (3 * pvXsqrd + Lfc ^ 2 - Lssqrd)) - Hx .* (Lof * (3 * pvXsqrd + Lof ^ 2 + 2 * Lssqrd - 6 * Ls * pvX)));
+    end
+    r = r * 1 / (6 * Es * Is * Ls);
+end
 
 %% Slope Function (Method of Singularity) 
 % vv works vv need docs vv
