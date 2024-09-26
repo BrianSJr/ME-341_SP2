@@ -217,14 +217,17 @@ for i = 2:length(x)
     z_zx(i) = z_running;
 end
 
+disp("Max y deflection: -" + max(-y_xy))
+disp("Max z deflection: -" + max(-z_zx))
+
 %figures in the 100's graph the numerical step approximation
 figure(100);
 hold on
-title("theta xy (num. approx.)");
+title("\theta xy (num. approx.)");
 plot(x, theta_xy);
 xaxis = yline(0);
 xlabel("x (m)");
-ylabel("theta (rad)");
+ylabel("\theta (rad)");
 hold off
 
 figure(101);
@@ -238,7 +241,7 @@ hold off
 
 figure(102);
 hold on
-title("theta zx (num. approx.)");
+title("\theta zx (num. approx.)");
 plot(x, -theta_zx);
 xaxis = yline(0);
 xlabel("x (m)");
