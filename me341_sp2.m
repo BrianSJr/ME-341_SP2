@@ -180,7 +180,7 @@ vFb = Fb * [0.0; -sin(Ab);  cos(Ab)];
 % Moment about z-axis at O:
 %
 %
-% Σ[(Mo)z] = Loa * (Fa)y + (Loa + Lab) * (Fb)y + (Loa + Lab + Lac) * (Fc)y = 0
+% Σ(Mo)z = Loa * (Fa)y + (Loa + Lab) * (Fb)y + (Loa + Lab + Lac) * (Fc)y = 0
 % 
 %
 % Solve for (Fc)y:
@@ -234,20 +234,25 @@ x = linspace(0, Ls, DIAGRAM_SAMPLES); % points along the x axis.
 mV = V(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls]);             % Shear Forces
 mM = M(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls]);             % Bending Moments
 
-disp(M(Loa, [vFo(2), vFa(2), vFb(2), vFc(2)], [0, Loa, Lob, Ls]));
-
 mT = T(x, [vFa, vFb], [Loa, Lob], [Da, Db]);                    % Torques
 
 mYsp = Ysp(x, [vFa, vFb], [Loa, Lob], Ls, E, I);                % Deflection (Superposition)
 mYs  = Ys(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls], E, I);    % Deflection (Singularity)
 
+mYmsp = sqrt(sum(mYsp .^ 2, 1));
+mYms = sqrt(sum(mYs .^ 2, 1));
+
 mSsp = Ssp(x, [vFa, vFb], [Loa, Lob], Ls, E, I);
 mSs = Ss(x, [vFo, vFa, vFb, vFc], [0, Loa, Lob, Ls], E, I); 
 
+mSmsp = sqrt(sum(mSsp .^ 2, 1));
+mSms = sqrt(sum(mSs .^ 2, 1));
 
+fprintf("Θy1 = %f, Θy2 = %f", mSs(2,1), mSs(2, end));
+fprintf("Θz1 = %f, Θz2 = %f", mSs(3,1), mSs(3, end));
 
 figure(1);
-tiledlayout(3, 1);
+tiledlayout(3, 4);
 nexttile;
 plot( ...
     x, mV(1, :), 'r', ...
@@ -257,7 +262,28 @@ plot( ...
 title("Shear Force");
 xlabel("x (mm)");
 ylabel("(V)xyz (kN)");
-legend("x-axis", "y-axis", "z-axis");
+legend("(V)x", "(V)y", "(V)z");
+
+nexttile;
+plot(x, mV(1, :), 'r');
+title("Shear Force (x-axis)");
+xlabel("x (mm)");
+ylabel("(V)x (kN)");
+legend("(V)x");
+
+nexttile;
+plot(x, mV(2, :), 'g');
+title("Shear Force (y-axis)");
+xlabel("x (mm)");
+ylabel("(V)y (kN)");
+legend("(V)y");
+
+nexttile;
+plot(x, mV(3, :), 'b');
+title("Shear Force (z-axis)");
+xlabel("x (mm)");
+ylabel("(V)z (kN)");
+legend("(V)z");
 
 nexttile
 plot( ...
@@ -268,7 +294,28 @@ plot( ...
 title("Bending Moment");
 xlabel("x (mm)");
 ylabel("(M)xyz (kNmm)");
-legend("x-axis", "y-axis", "z-axis");
+legend("(M)x", "(M)y", "(M)z");
+
+nexttile;
+plot(x, mM(1, :), 'r');
+title("Bending Moment (x-axis)");
+xlabel("x (mm)");
+ylabel("(M)x (kNmm)");
+legend("(M)x");
+
+nexttile;
+plot(x, mM(2, :), 'g');
+title("Bending Moment (y-axis)");
+xlabel("x (mm)");
+ylabel("(M)y (kNmm)");
+legend("(M)y");
+
+nexttile;
+plot(x, mM(3, :), 'b');
+title("Bending Moment (z-axis)");
+xlabel("x (mm)");
+ylabel("(M)z (kNmm)");
+legend("(M)z");
 
 nexttile
 plot( ...
@@ -279,11 +326,32 @@ plot( ...
 title("Torque");
 xlabel("x (mm)");
 ylabel("(T)xyz (kNmm)");
-legend("x-axis", "y-axis", "z-axis");
+legend("(T)x", "(T)y", "(T)z");
 
+nexttile
+plot(x, mT(1, :), 'r');
+title("Torque (x-axis)");
+xlabel("x (mm)");
+ylabel("(T)x (kNmm)");
+legend("(T)x");
 
-% vv update/create plots (title, x/y labels, legends) vv
-figure(4);
+nexttile
+plot(x, mT(2, :), 'g');
+title("Torque (y-axis)");
+xlabel("x (mm)");
+ylabel("(T)y (kNmm)");
+legend("(T)y");
+
+nexttile
+plot(x, mT(3, :), 'b');
+title("Torque (z-axis)");
+xlabel("x (mm)");
+ylabel("(T)z (kNmm)");
+legend("(Y)z");
+
+figure;
+tiledlayout(4, 4);
+nexttile;
 plot( ...
    x, mYsp(1, :), 'r', ...
    x, mYsp(2, :), 'g', ...
@@ -291,26 +359,184 @@ plot( ...
    );
 title("Deflection (Super Position)");
 xlabel("x (mm)");
-ylabel("Y (mm)");
+ylabel("(Y)xyz (mm)");
+legend("(Y)x","(Y)y","(Y)z");
 
-figure(5);
+nexttile;
+plot(x, mYsp(1, :), 'r');
+title("Deflection (Super Position) (x-axis)");
+xlabel("x (mm)");
+ylabel("(Y)x (mm)");
+legend("(Y)x");
+
+nexttile;
+plot(x, mYsp(2, :), 'g');
+title("Deflection (Super Position) (y-axis)");
+xlabel("x (mm)");
+ylabel("(Y)y (mm)");
+legend("(Y)y");
+
+nexttile;
+plot(x, mYsp(3, :), 'b');
+title("Deflection (Super Position) (z-axis)");
+xlabel("x (mm)");
+ylabel("(Y)z (mm)");
+legend("(Y)z");
+
+nexttile;
 plot( ...
    x, mYs(1, :), 'r', ...
    x, mYs(2, :), 'g', ...
    x, mYs(3, :), 'b' ...
    );
-figure(6);
-plot( ...
-   x, mSsp(1, :), 'r', ...
-   x, mSsp(2, :), 'g', ...
-   x, mSsp(3, :), 'b' ...
-   );
-figure(7);
+title("Deflection (Singularity)");
+xlabel("x (mm)");
+ylabel("(Y)xyz (mm)");
+legend("(Y)x","(Y)y","(Y)z");
+
+nexttile;
+plot(x, mYs(1, :), 'r');
+title("Deflection (Singularity) (x-axis)");
+xlabel("x (mm)");
+ylabel("(Y)x (mm)");
+legend("(Y)x");
+
+nexttile;
+plot(x, mYs(2, :), 'g');
+title("Deflection (Singularity) (y-axis)");
+xlabel("x (mm)");
+ylabel("(Y)y (mm)");
+legend("(Y)y");
+
+nexttile;
+plot(x, mYs(3, :), 'b');
+title("Deflection (Singularity) (z-axis)");
+xlabel("x (mm)");
+ylabel("(Y)z (mm)");
+legend("(Y)z");
+
+nexttile;
 plot( ...
    x, mSs(1, :), 'r', ...
    x, mSs(2, :), 'g', ...
    x, mSs(3, :), 'b' ...
    );
+title("Slope (Singularity)");
+xlabel("x (mm)");
+ylabel("(S)xyz (mm)");
+legend("(S)x","(S)y","(S)z");
+
+nexttile;
+plot(x, mSs(1, :), 'r');
+title("Slope (Singularity) (x-axis)");
+xlabel("x (mm)");
+ylabel("(S)x (mm)");
+legend("(S)x");
+
+nexttile;
+plot(x, mSs(2, :), 'g');
+title("Slope (Singularity) (y-axis)");
+xlabel("x (mm)");
+ylabel("(S)y (mm)");
+legend("(S)y");
+
+nexttile;
+plot(x, mSs(3, :), 'b');
+title("Slope (Singularity) (z-axis)");
+xlabel("x (mm)");
+ylabel("(S)z (mm)");
+legend("(S)z");
+
+nexttile;
+plot( ...
+   x, mSsp(1, :), 'r', ...
+   x, mSsp(2, :), 'g', ...
+   x, mSsp(3, :), 'b' ...
+   );
+title("Slope (Singularity)");
+xlabel("x (mm)");
+ylabel("(S)xyz (rads)");
+legend("(S)x","(S)y","(S)z");
+
+nexttile;
+plot(x, mSsp(1, :), 'r');
+title("Slope (Singularity) (x-axis)");
+xlabel("x (mm)");
+ylabel("(S)x (rads)");
+legend("(S)z");
+
+nexttile;
+plot(x, mSsp(2, :), 'g');
+title("Slope (Singularity) (y-axis)");
+xlabel("x (mm)");
+ylabel("(S)y (rads)");
+legend("(S)y");
+
+nexttile;
+plot(x, mSsp(3, :), 'b');
+title("Slope (Singularity) (z-axis)");
+xlabel("x (mm)");
+ylabel("(S)z (rads)");
+legend("(S)z");
+
+figure;
+tiledlayout(2, 2);
+nexttile;
+plot(x, mYmsp, 'k');
+title("Deflection (Super Position) (Magnitude)");
+xlabel("x (mm)");
+ylabel("Ysp (mm)");
+legend("|Ysp|");
+
+nexttile;
+plot(x, mYmsp, 'k');
+title("Deflection (Singularity) (Magnitude)");
+xlabel("x (mm)");
+ylabel("Ys (mm)");
+legend("|Ys|");
+
+nexttile;
+plot(x, mYmsp, 'k');
+title("Slope (Super Position) (Magnitude)");
+xlabel("x (mm)");
+ylabel("Ssp (rads)");
+legend("|Ssp|");
+
+nexttile;
+plot(x, mYmsp, 'k');
+title("Slope (Singularity) (Magnitude)");
+xlabel("x (mm)");
+ylabel("Ss (rads)");
+legend("|Ss|");
+
+
+
+% nexttile;
+% plot(x, mSsp(3, :), 'b');
+% title("Slope (Singularity) (Magnitude)");
+% xlabel("x (mm)");
+% ylabel("(S) (mm)");
+% legend("|S|");
+
+% vv update/create plots (title, x/y labels, legends) vv
+% figure(5);
+% plot( ...
+%    x, mYs(1, :), 'r', ...
+%    x, mYs(2, :), 'g', ...
+%    x, mYs(3, :), 'b' ...
+%    );
+% figure(6);
+% plot( ...
+%    x, mSsp(1, :), 'r', ...
+%    x, mSsp(2, :), 'g', ...
+%    x, mSsp(3, :), 'b' ...
+%    );
+% figure(7);
+% plot( ...
+%    x, mSs(1, :), 'r', ...
+%    x, mSs(2, :), 'g', ...
+%    x, mSs(3, :), 'b' ...
+%    );
 
 %% Shear Force Function
 % Explanation:
@@ -343,8 +569,9 @@ plot( ...
 %    ⌠           { < x - a >^(n+1)          when n <  0 }
 % <= ⌡<x-a>ⁿdx = { < x - a >^(n+1)/(n+1)    when n >= 0 }
 %
+%
 %      ⌠
-%   >> ⌡<x-a>^(-1) = <x-a>^0
+%   >> ⌡(<x-a>^(-1))dx = <x-a>^0 + C
 %
 % => vV(x) = vFo<x>^0 + vFa<x-Loa>^0 + vFb<x-Lob>^0 + vFc<x-Ls>^0 + vCv
 % => vV(x) = vFo*H(x) + vFa*H(x-Loa) + vFb*H(x-Lob) + vFc*H(x-Ls) + vCv
@@ -395,107 +622,49 @@ function r = V(svX, mF, vL)
 end
 
 
-% Explanation:
-% Using singularity functions we can express our load function as:
-%
-%
-% vw(x) = vFo*<x>^(-1) + vFa*<x-Loa>^(-1) + vFb*<x-Lob>^(-1) + vFc*<x-Ls>^(-1).
-% 
-%
-% Singularity Functions:
-%
-%
-% <= <x-a>ⁿ = { δ{|n+1|}(x-a)  when n <  0 } 
-%             { (x-a)ⁿH(x-a)   when n >= 0 }
-% Where δ{i}(x) is the i-th derivative of the dirac delta function. 
-% (eg. i=0 --> δ(x), i=1 --> δ'(x), i=2 --> δ''(x), ...). Note |n+1| in the 
-% formula when applying it.     
-%
-% <= δ(x)   = { 0   when x <  0 }
-%             { 1   when x >= 0 }
-%           
-% <= H(x)   = { 1   when x == 0 }
-%             { 0   when x != 0 } 
-%
-% Integrating vw(x) yeilds the following:
-% 
-%         ⌠             ⌠                ⌠                    ⌠                    ⌠
-% vV(x) = ⌡vw(x)dx = vFo⌡<x>^(-1)dx + vFa⌡<x-Loa>^(-1)dx + vFb⌡<x-Lob>^(-1)dx + vFc⌡<x-Ls>^(-1)dx.
-%
-%    ⌠           { < x - a >^(n+1)          when n <  0 }
-% <= ⌡<x-a>ⁿdx = { < x - a >^(n+1)/(n+1)    when n >= 0 }
-%
-%      ⌠
-%   >> ⌡<x-a>^(-1) = <x-a>^0
-%
-% => vV(x) = vFo<x>^0 + vFa<x-Loa>^0 + vFb<x-Lob>^0 + vFc<x-Ls>^0 + vCv
-% => vV(x) = vFo*H(x) + vFa*H(x-Loa) + vFb*H(x-Lob) + vFc*H(x-Ls) + vCv
-%
-%   >> V(x) = vFo*H(x) + vFa*H(x-Loa) + vFb*H(x-Lob) + vFc*H(x-Ls) + vCv
-%
-% Solve for when V(0) = 0i + 0j + 0k:
-% 
-%
-% => vV(0) = vFo*H(0) + vFa*H(0-Loa) + vFb*H(0-Lob) + vFc*H(0-Ls) + vCv = 0i + 0j + 0k
-%
-% <= H(0)     = 0
-% <= H(0-Loa) = H(-Loa) = 0
-% <= H(0-Lob) = H(-Lob) = 0
-% <= H(0-Ls)  = H(0)    = 0
-%
-% => vV(0) = vFo*(0) + vFa*(0) + vFb*(0) + vFc*(0) + vCv = 0i + 0j + 0k
-% 
-%   >> vCv   = 0i + 0j + 0k
-%   >> vV(x) = vFo*H(x) + vFa*H(x-Loa) + vFb*H(x-Lob) + vFc*H(x-Ls)
-%
-% Matlab Implementation:
-%   By passing a scalar or row vector of positions and arrays representing 
-%   the point forces and their position along the beam, the function can 
-%   calculate the Shear Force for each position.
-% 
-% Arguments:
-%   svX - Scalar or row vector (1 by N matrix) representing the position
-%         or positions to calcualte the shear force at.
-%   mF  - Array of column vectors which represent forces (looks like a matrix).
-%   vL  - Array of lengths representing locations of each point force.
-% Requirements:
-%   - All arguments must satisfy isnumeric.
-%   - The number of forces (column vectors) in mF must be equal to the
-%     number of lengths (scalars) in vL.
-%
-
-
-
-
-%% Bending Force Function  vv needs doc update vv
+%% Bending Force Function:
 % Recall our shear force function vV(x) with the singularity function definition:
 %
 %   >> vV(x) = vFo<x>^0 + vFa<x-Loa>^0 + vFb<x-Lob>^0 + vFc<x-Ls>^0 + vCv
 % 
 % Integrating the shear force function yeilds the following:
+% Note that we use the cross product between the arm vector and the force
+% at that position. 
 %
-% 
+%                ⌠                  ⌠                ⌠                    ⌠                    ⌠
+% => vM(x) = i x ⌡vV(x)dx = i x (vFo⌡<x>^(-1)dx + vFa⌡<x-Loa>^(-1)dx + vFb⌡<x-Lob>^(-1)dx + vFc⌡<x-Ls>^(-1)dx)
+%    
+%      ⌠
+%   >> ⌡(<x-a>^0)dx = <x-a>^1 + C
 %
-% Integrating the shear force function reveals the following:
+% => vM(x) = (<x>^1)i x vFo + (<x-Loa>^1)i x vFa + (<x-Lob>^1)i x vFb + (<x-Ls>^1)i x vFc 
+% => vM(x) = (xH(x))i x vFo + (x-Loa)H(x-Loa)i x vFa + (x-Lob)H(x-Loa)i + vFb + (x-Ls)H(x-Ls)i x vFc + vCm
 % 
-% M(x) = u(x)*x*vFo + u(x-Loa)*(x-Loa)*vFa + u(x-Lob)*(x-Lob)*vFb +
-% u(x-Ls)*(x-Ls)*vFc
-% where u(t) = { t < 0: 1, 0 } (step function)
+%   >> vM(x) = (xH(x))i x vFo + (x-Loa)H(x-Loa)i x vFa + (x-Lob)H(x-Loa)i + vFb + (x-Ls)H(x-Ls)i x vFc + vCm
+%  
+% Solve for vCm when vM(0) = 0i + 0j + 0k:
+%
+% => vM(0) = 0i + 0j + 0k + vCm
+%
+%   >> vCM = 0i + 0j + 0k
+%   >> vM(x) = (xH(x))i x vFo + (x-Loa)H(x-Loa)i x vFa + (x-Lob)H(x-Loa)i + vFb + (x-Ls)H(x-Ls)i x vFc
 %
 % Matlab Implementation:
 %   By passing a scalar or row vector of positions and arrays representing 
 %   the point forces and their position along the beam, the function can 
-%   calculate the Shear Force for each position.
+%   calculate the Bending Moment Force for each position.
 % 
 % Arguments:
 %   svPos - Scalar or row vector (1 by N matrix) representing the position
-%           or positions to calcualte the bending moment at.
+%           or positions to calcualte the Bending Moment at.
 %   mF    - Array of column vectors which represent forces (looks like a matrix).
 %   vL    - Array of lengths representing locations of each point force.
+%
 % Requirements:
 %   - All arguments must satisfy isnumeric.
 %   - The number of forces (column vectors) in mF must be equal to the
-%     number of lengths (scalars) in vL.
+%     number of lengths (scalars) in vL and the number of rows must be
+%     either 1 or 3.
 %
 function r = M(pvX, mF, vL) 
     arguments
@@ -506,7 +675,6 @@ function r = M(pvX, mF, vL)
     assert(size(mF, 2) ~= size(vL, 1), "the number of forces must be equal to the number of lengths"); 
     assert(size(mF, 1) == 1 || size(mF, 1) == 3, "must be 3D or 1D");
     r = 0;
-    disp(size(mF))
     if(size(mF, 1))
         for i = 1:size(mF, 2)
             r = r + mF(:,i) * ((pvX - vL(i)) .* (pvX > vL(i)));
@@ -522,8 +690,7 @@ end
 % Taking the cross product at each gear radius and force according to
 % length yeilds the following:
 %  
-% T(x) = u(x-Loa) * (Da/2)j x vFa + u(x-Lob) * (Db/2)j x vFb
-% where u(t) = { t < 0: 1, 0 } (step function)
+% T(x) = (Da/2)H(x-Loa)j x vFa + (Db/2)H(x-Lob)j x vFb
 %
 % Matlab Implementation:
 %   By passing a scalar or row vector of positions and arrays representing 
@@ -543,7 +710,7 @@ end
 function r = T(pvX, mF, vL, vD)
     arguments
         pvX (1, :) {isnumeric},
-        mF (:, :) {isnumeric},
+        mF (3, :) {isnumeric},
         vL (1, :) {isnumeric},
         vD (1, :) {isnumeric}
     end
