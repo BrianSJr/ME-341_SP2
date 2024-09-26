@@ -6,13 +6,7 @@
 
 %% TODO:
 % 2. Document remaining functions:
-%   - Bending Moment
 %   - Torque 
-%   - Deflection (Singularity)
-%   - Deflection (Superposition)
-%   - Slope (Singularity)
-%   - Slope (Superposition)
-% 3. Update Figures (title, x/y labels, legeneds)
 %   - Deflection (Singularity)
 %   - Deflection (Superposition)
 %   - Slope (Singularity)
@@ -417,6 +411,39 @@ legend("(Y)z");
 
 nexttile;
 plot( ...
+   x, mSsp(1, :), 'r', ...
+   x, mSsp(2, :), 'g', ...
+   x, mSsp(3, :), 'b' ...
+   );
+title("Slope (Super Position)");
+xlabel("x (mm)");
+ylabel("(S)xyz (rads)");
+legend("(S)x","(S)y","(S)z");
+
+nexttile;
+plot(x, mSsp(1, :), 'r');
+title("Slope (Super Position) (x-axis)");
+xlabel("x (mm)");
+ylabel("(S)x (rads)");
+legend("(S)z");
+
+nexttile;
+plot(x, mSsp(2, :), 'g');
+title("Slope (Super Position) (y-axis)");
+xlabel("x (mm)");
+ylabel("(S)y (rads)");
+legend("(S)y");
+
+nexttile;
+plot(x, mSsp(3, :), 'b');
+title("Slope (Super Position) (z-axis)");
+xlabel("x (mm)");
+ylabel("(S)z (rads)");
+legend("(S)z");
+
+
+nexttile;
+plot( ...
    x, mSs(1, :), 'r', ...
    x, mSs(2, :), 'g', ...
    x, mSs(3, :), 'b' ...
@@ -445,38 +472,6 @@ plot(x, mSs(3, :), 'b');
 title("Slope (Singularity) (z-axis)");
 xlabel("x (mm)");
 ylabel("(S)z (mm)");
-legend("(S)z");
-
-nexttile;
-plot( ...
-   x, mSsp(1, :), 'r', ...
-   x, mSsp(2, :), 'g', ...
-   x, mSsp(3, :), 'b' ...
-   );
-title("Slope (Singularity)");
-xlabel("x (mm)");
-ylabel("(S)xyz (rads)");
-legend("(S)x","(S)y","(S)z");
-
-nexttile;
-plot(x, mSsp(1, :), 'r');
-title("Slope (Singularity) (x-axis)");
-xlabel("x (mm)");
-ylabel("(S)x (rads)");
-legend("(S)z");
-
-nexttile;
-plot(x, mSsp(2, :), 'g');
-title("Slope (Singularity) (y-axis)");
-xlabel("x (mm)");
-ylabel("(S)y (rads)");
-legend("(S)y");
-
-nexttile;
-plot(x, mSsp(3, :), 'b');
-title("Slope (Singularity) (z-axis)");
-xlabel("x (mm)");
-ylabel("(S)z (rads)");
 legend("(S)z");
 
 figure;
@@ -517,26 +512,6 @@ legend("|Ss|");
 % xlabel("x (mm)");
 % ylabel("(S) (mm)");
 % legend("|S|");
-
-% vv update/create plots (title, x/y labels, legends) vv
-% figure(5);
-% plot( ...
-%    x, mYs(1, :), 'r', ...
-%    x, mYs(2, :), 'g', ...
-%    x, mYs(3, :), 'b' ...
-%    );
-% figure(6);
-% plot( ...
-%    x, mSsp(1, :), 'r', ...
-%    x, mSsp(2, :), 'g', ...
-%    x, mSsp(3, :), 'b' ...
-%    );
-% figure(7);
-% plot( ...
-%    x, mSs(1, :), 'r', ...
-%    x, mSs(2, :), 'g', ...
-%    x, mSs(3, :), 'b' ...
-%    );
 
 %% Shear Force Function
 % Explanation:
@@ -629,7 +604,7 @@ end
 % 
 % Integrating the shear force function yeilds the following:
 % Note that we use the cross product between the arm vector and the force
-% at that position. 
+% at that position to maintain the. 
 %
 %                ⌠                  ⌠                ⌠                    ⌠                    ⌠
 % => vM(x) = i x ⌡vV(x)dx = i x (vFo⌡<x>^(-1)dx + vFa⌡<x-Loa>^(-1)dx + vFb⌡<x-Lob>^(-1)dx + vFc⌡<x-Ls>^(-1)dx)
@@ -705,7 +680,8 @@ end
 % Requirements:
 %   - All arguments must satisfy isnumeric.
 %   - The number of forces (column vectors) in mF must be equal to the
-%     number of lengths (scalars) in vL.
+%     number of lengths (scalars) in vL. The number of rows in mF must be 
+%     equal to 3.
 %
 function r = T(pvX, mF, vL, vD)
     arguments
@@ -723,7 +699,50 @@ function r = T(pvX, mF, vL, vD)
 end
 
 %% Delfection (Method of Superposition):
-% vv needs docs vv
+% The formulas for deflection on a single bar with pin supports at both
+% ends is the following:
+%
+%   >> Yab = (F * b * x) / (6 * E * I * L) * (x^2 + b^2 - L^2)      when x < a
+%   >> Ybc = (F * a * (L-x)) / (6 * E * I * L) * (x^2 + a^2 - 2Lx)  when x >= a
+%
+%  |<--------l-------->|
+%  |       F           |
+%  |<--a-->|<----b---->|
+%  |       v           |
+%  A===================B
+%  ^                   ^
+%  |                   |
+%  R1                  R2
+%
+%   >> ΣY = Y0 + ... + Yn
+%
+% Substitute:
+%
+%   >> Ys0 = -(vFa * (Lab+Lbc) * x) / (6 * E * I * Ls) * (x^2 + (Lab+Lbc)^2 - Ls^2) when x < Loa
+%   >> Ys0 = -(vFa *Loa(Ls-x)) / (6 * E * I * Ls) * (x^2 + Loa^2 - 2Ls*x)           when x >= Loa
+%
+%   >> Ys1 = -(vFb * Lbc * x) / (6 * E * I * Ls) * (x^2 + Lbc^2 - Ls^2)             when x < Lob
+%   >> Ys1 = -(vFb * Lob * (Ls - x)) / (6 * E * I * Ls) * (x^2 + Lob^2 -2 * Ls * x) when x >= Lob
+%
+% Matlab Implementation:
+%   By passing a scalar or row vector of positions and arrays representing 
+%   the point forces and their position along the beam, the function can 
+%   calculate the Deflection for each position.
+% 
+% Arguments:
+%   svPos - Scalar or row vector (1 by N matrix) representing the position
+%           or positions to calcualte the deflection at.
+%   mF    - Array of column vectors which represent forces (looks like a matrix).
+%   vL    - Array of lengths representing locations of each point force.
+%   Ls    - Length of the bar (scalar).
+%   Es    - Youngs Modulus (scalar).
+%   Is    - Moment of Inertia of the beam (scalar).
+% Requirements:
+%   - All arguments must satisfy isnumeric.
+%   - The number of forces (column vectors) in mF must be equal to the
+%     number of lengths (scalars) in vL. The number of rows in mF must be 
+%     equal to 3.
+%
 function r = Ysp(pvX, mF, vL, Ls, Es, Is)
     arguments
         pvX (1, :) {isnumeric},
@@ -747,6 +766,48 @@ function r = Ysp(pvX, mF, vL, Ls, Es, Is)
 end
 
 %% Deflection (Method of Singularity):
+% Recall our moment force function vV(x) with the singularity function definition:
+%
+%   >> vM(x) = (<x>^1)i x vFo + (<x-Loa>^1)i x vFa + (<x-Lob>^1)i x vFb + (<x-Ls>^1)i x vFc 
+% 
+% Integrating the shear force function yeilds the following:
+% Note that we use the cross product between the arm vector and the force
+% at that position to maintain the. 
+%
+%                ⌠                  ⌠                ⌠                    ⌠                    ⌠
+% => vM(x) = i x ⌡vV(x)dx = i x (vFo⌡<x>^(-1)dx + vFa⌡<x-Loa>^(-1)dx + vFb⌡<x-Lob>^(-1)dx + vFc⌡<x-Ls>^(-1)dx)
+%    
+%      ⌠
+%   >> ⌡(<x-a>^0)dx = <x-a>^1 + C
+%
+% => vM(x) = (<x>^1)i x vFo + (<x-Loa>^1)i x vFa + (<x-Lob>^1)i x vFb + (<x-Ls>^1)i x vFc 
+% => vM(x) = (xH(x))i x vFo + (x-Loa)H(x-Loa)i x vFa + (x-Lob)H(x-Loa)i + vFb + (x-Ls)H(x-Ls)i x vFc + vCm
+% 
+%   >> vM(x) = (xH(x))i x vFo + (x-Loa)H(x-Loa)i x vFa + (x-Lob)H(x-Loa)i + vFb + (x-Ls)H(x-Ls)i x vFc + vCm
+%  
+% Solve for vCm when vM(0) = 0i + 0j + 0k:
+%
+% => vM(0) = 0i + 0j + 0k + vCm
+%
+%   >> vCM = 0i + 0j + 0k
+%   >> vM(x) = (xH(x))i x vFo + (x-Loa)H(x-Loa)i x vFa + (x-Lob)H(x-Loa)i + vFb + (x-Ls)H(x-Ls)i x vFc
+%
+% Matlab Implementation:
+%   By passing a scalar or row vector of positions and arrays representing 
+%   the point forces and their position along the beam, the function can 
+%   calculate the Bending Moment Force for each position.
+% 
+% Arguments:
+%   svPos - Scalar or row vector (1 by N matrix) representing the position
+%           or positions to calcualte the Bending Moment at.
+%   mF    - Array of column vectors which represent forces (looks like a matrix).
+%   vL    - Array of lengths representing locations of each point force.
+%
+% Requirements:
+%   - All arguments must satisfy isnumeric.
+%   - The number of forces (column vectors) in mF must be equal to the
+%     number of lengths (scalars) in vL and the number of rows must be
+%     either 1 or 3.
 %
 function r = Ys(pvX, mF, vL, Es, Is) 
    arguments
@@ -766,7 +827,50 @@ function r = Ys(pvX, mF, vL, Es, Is)
 end 
 
 %% Slope Function (Method of Superposition)
-% vv not implemented (duh) vv
+% The formulas for Slope on a single bar with pin supports at both
+% ends is the following:
+%
+%   >> Yab = (F * b * x) / (6 * E * I * L) * (x^2 + b^2 - L^2)              when x < a
+%   >> Ybc = (F * a * (L-x)) / (6 * E * I * L) * (x^2 + a^2 - 2 * L * x)    when x >= a
+%
+%  |<--------l-------->|
+%  |       F           |
+%  |<--a-->|<----b---->|
+%  |       v           |
+%  A===================B
+%  ^                   ^
+%  |                   |
+%  R1                  R2
+%
+%   >> ΣY = Y0 + ... + Yn
+%
+% Substitute:
+%
+%   >> Ys0 = -(vFa * (Lab+Lbc) * x)/(6 * E * I * Ls) * (x^2 + (Lab+Lbc)^2 - Ls^2)   when x < Loa
+%   >> Ys0 = -(vFa * Loa(Ls-x)) / (6 * E * I * Ls) * (x^2 + Loa^2 - 2Ls*x)          when x >= Loa
+%
+%   >> Ys1 = -(vFb * Lbc * x) / (6 * E * I * Ls) * (x^2 + Lbc^2 - Ls^2)             when x < Lob
+%   >> Ys1 = -(vFb * Lob * (Ls - x)) / (6 * E * I * Ls) * (x^2 + Lob^2 -2Ls * x)    when x >= Lob
+%
+% Matlab Implementation:
+%   By passing a scalar or row vector of positions and arrays representing 
+%   the point forces and their position along the beam, the function can 
+%   calculate the Slope for each position.
+% 
+% Arguments:
+%   svPos - Scalar or row vector (1 by N matrix) representing the position
+%           or positions to calcualte the deflection at.
+%   mF    - Array of column vectors which represent forces (looks like a matrix).
+%   vL    - Array of lengths representing locations of each point force.
+%   Ls    - Length of the bar (scalar).
+%   Es    - Youngs Modulus (scalar).
+%   Is    - Moment of Inertia of the beam (scalar).
+% Requirements:
+%   - All arguments must satisfy isnumeric.
+%   - The number of forces (column vectors) in mF must be equal to the
+%     number of lengths (scalars) in vL. The number of rows in mF must be 
+%     equal to 3.
+%
 function r = Ssp(pvX, mF, vL, Ls, Es, Is)
     arguments
         pvX (1, :) {isnumeric},
