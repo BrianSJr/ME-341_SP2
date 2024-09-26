@@ -1,9 +1,72 @@
-﻿Study Modal Analysis:1 started: 9/24/2024, 5:56:20 PM
+﻿Study Modal Analysis:1 started: 9/25/2024, 5:55:58 PM
+Number of configurations: 1
+Default mesh: 2681 elements, 4595 nodes
+Computed 8 frequency modes
+Solution time 0.5s
+Reached the total number of h refinements 
+Study        Worst Jacobian ratio :  2.51  on element 2563 finished: 9/25/2024, 5:55:59 PM
+Total time 0:00:01
+
+Study Modal Analysis:1 started: 9/25/2024, 5:56:35 PM
+Number of configurations: 1
+Study Modal Analysis:1 finished: 9/25/2024, 5:56:35 PM
+Total time 0:00:00
+
+Study Modal Analysis:1 started: 9/25/2024, 8:09:16 PM
+Number of configurations: 1
+Study Modal Analysis:1 finished: 9/25/2024, 8:09:16 PM
+Total time 0:00:00
+
+Study Static Analysis:1 started: 9/25/2024, 8:09:22 PM
+Number of configurations: 1
+Study Static Analysis:1 finished: 9/25/2024, 8:09:22 PM
+Total time 0:00:00
+
+Study Modal Analysis:1 started: 9/25/2024, 8:09:50 PM
 Number of configurations: 1
 Default mesh: 1598 elements, 3094 nodes
 Computed 8 frequency modes
 Solution time 0.4s
 Reached the total number of h refinements 
-Study Modal Analysis:1 finished: 9/24/2024, 5:56:21 PM
+Study Modal Analysis:1 finished: 9/25/2024, 8:09:51 PM
 Total time 0:00:01
+
+Study Modal Analysis:1 started: 9/25/2024, 8:11:15 PM
+Number of configurations: 1
+Study Modal Analysis:1 finished: 9/25/2024, 8:11:15 PM
+Total time 0:00:00
+
+Study Modal Analysis:1 started: 9/25/2024, 8:14:36 PM
+Number of configurations: 1
+Default mesh: 1853 elements, 3635 nodes
+Computed 8 frequency modes
+Solution time 0.5s
+Reached the total number of h refinements 
+Study        Worst Jacobian ratio :  1.72  on element 1301 finished: 9/25/2024, 8:14:38 PM
+Total time 0:00:02
+
+Study Modal Analysis:1 started: 9/25/2024, 8:33:32 PM
+Number of configurations: 1
+Study Modal Analysis:1 finished: 9/25/2024, 8:33:32 PM
+Total time 0:00:00
+
+Study Modal Analysis:1 started: 9/25/2024, 8:34:33 PM
+Number of configurations: 1
+Study Modal Analysis:1 finished: 9/25/2024, 8:34:33 PM
+Total time 0:00:00
+
+Study Modal Analysis:1 started: 9/25/2024, 8:38:01 PM
+Number of configurations: 1
+Study Modal Analysis:1 finished: 9/25/2024, 8:38:01 PM
+Total time 0:00:00
+
+Study Modal Analysis:1 started: 9/25/2024, 8:38:12 PM
+Number of configurations: 1
+Study Modal Analysis:1 finished: 9/25/2024, 8:38:12 PM
+Total time 0:00:00
+
+Study Modal Analysis:1 started: 9/25/2024, 8:41:44 PM
+Number of configurations: 1
+Study Modal Analysis:1 finished: 9/25/2024, 8:41:44 PM
+Total time 0:00:00
 
